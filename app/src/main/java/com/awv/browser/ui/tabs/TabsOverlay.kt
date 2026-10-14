@@ -85,7 +85,7 @@ fun TabsOverlay(c: BrowserController, onDone: () -> Unit) {
                     Modifier
                         .height(44.dp)
                         .pressable(label = "Done", onClick = onDone)
-                        .background(Color.White, doneShape)
+                        .background(Awv.Card, doneShape)
                         .border(1.dp, Awv.Line, doneShape)
                         .padding(horizontal = 22.dp),
                     contentAlignment = Alignment.Center
@@ -158,7 +158,7 @@ private fun Segmented(privateMode: Boolean, onChange: (Boolean) -> Unit) {
 private fun Seg(label: String, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val shape = RoundedCornerShape(20.dp)
     val base = modifier.fillMaxHeight().tappable(label = label, role = Role.Tab, onClick = onClick)
-    val styled = if (selected) base.shadow(2.dp, shape).background(Color.White, shape) else base
+    val styled = if (selected) base.shadow(2.dp, shape).background(Awv.Card, shape) else base
     Box(styled, contentAlignment = Alignment.Center) {
         BasicText(label, style = awvText(14, FontWeight.Bold, if (selected) Awv.Ink else Awv.Muted))
     }
@@ -172,7 +172,7 @@ private fun EmptyPrivate(modifier: Modifier, isolated: Boolean) {
         verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically)
     ) {
         Box(
-            Modifier.size(96.dp).background(Color.White, CircleShape).border(1.dp, Awv.Line, CircleShape),
+            Modifier.size(96.dp).background(Awv.Card, CircleShape).border(1.dp, Awv.Line, CircleShape),
             contentAlignment = Alignment.Center
         ) { AwvIcon(AwvIcons.Private, size = 52.dp, tint = Awv.Purple, strokeWidth = 1.5f) }
         BasicText("No private tabs", style = awvText(20, FontWeight.ExtraBold, Awv.Ink))
@@ -199,7 +199,7 @@ private fun TabCard(tab: BrowserTab, active: Boolean, onOpen: () -> Unit, onClos
             .fillMaxWidth()
             .pressable(label = title, onClick = onOpen)
             .clip(shape)
-            .background(Color.White, shape)
+            .background(Awv.Card, shape)
             .border(if (active) 2.dp else 1.dp, if (active) Awv.Coral else Awv.Line, shape)
     ) {
         Row(

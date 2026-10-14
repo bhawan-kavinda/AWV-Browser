@@ -63,7 +63,7 @@ import com.awv.browser.ui.theme.awvText
 fun BrowserPage(c: BrowserController, tab: BrowserTab, actions: HomeActions) {
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
-    Column(Modifier.fillMaxSize().background(Color.White).imePadding()) {
+    Column(Modifier.fillMaxSize().background(Awv.Card).imePadding()) {
         PageTopBar(c, tab, actions.onShield)
         Box(Modifier.weight(1f).fillMaxWidth()) {
             val webView = tab.webView
@@ -98,7 +98,7 @@ fun BrowserPage(c: BrowserController, tab: BrowserTab, actions: HomeActions) {
 @Composable
 private fun PageTopBar(c: BrowserController, tab: BrowserTab, onShield: () -> Unit) {
     val dark = tab.isPrivate
-    val barBg = if (dark) Awv.Bg else Color.White
+    val barBg = if (dark) Awv.Bg else Awv.Card
     val pillBg = if (dark) Color.White.copy(alpha = .14f) else Awv.Surface
     val textColor = if (dark) Color.White else Awv.Ink
     val hintColor = if (dark) Color.White.copy(alpha = .6f) else Awv.Muted
@@ -254,7 +254,7 @@ private fun ErrorView(tab: BrowserTab, raw: String, onRetry: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically)
     ) {
         Box(
-            Modifier.size(96.dp).background(Color.White, CircleShape).border(1.dp, Awv.Line, CircleShape),
+            Modifier.size(96.dp).background(Awv.Card, CircleShape).border(1.dp, Awv.Line, CircleShape),
             contentAlignment = Alignment.Center
         ) { AwvIcon(AwvIcons.Globe, size = 48.dp, tint = Awv.Purple, strokeWidth = 1.5f) }
         BasicText("Can't open this page", style = awvText(20, FontWeight.ExtraBold, Awv.Ink))

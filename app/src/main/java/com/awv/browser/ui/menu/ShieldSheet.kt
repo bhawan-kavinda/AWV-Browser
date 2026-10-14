@@ -56,7 +56,7 @@ fun ShieldSheet(c: BrowserController, tab: BrowserTab, onDismiss: () -> Unit) {
             Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(Color.White, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(Awv.Card, RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                 .pointerInput(Unit) { detectTapGestures { } }
                 .navigationBarsPadding()
                 .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 20.dp),

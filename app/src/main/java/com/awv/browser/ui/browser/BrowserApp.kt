@@ -9,6 +9,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
@@ -36,6 +37,7 @@ import com.awv.browser.ui.menu.Sheet
 import com.awv.browser.ui.menu.ShieldSheet
 import com.awv.browser.ui.tabs.TabsOverlay
 import com.awv.browser.ui.theme.Awv
+import com.awv.browser.ui.theme.AwvTheme
 
 /** Root screen: start page or web page for the active tab, plus the tabs overlay and video fullscreen. */
 @Composable
@@ -59,7 +61,15 @@ fun BrowserApp(c: BrowserController) {
         }
     )
 
-    StatusBarIcons(darkIcons = showTabs || sheet >= Sheet.Bookmarks || (!tab.showHome && !tab.isPrivate))
+    // Follow the device's dark / light setting (used while the user hasn't picked a mode with the toggle).
+    val systemDark = isSystemInDarkTheme()
+    SideEffect { AwvTheme.systemDark = systemDark }
+
+    val dark = AwvTheme.dark
+    StatusBarIcons(
+        darkIcons = !dark && (showTabs || sheet >= Sheet.Bookmarks || (!tab.showHome && !tab.isPrivate)),
+        darkNavIcons = !dark
+    )
 
     BackHandler(enabled = fullscreen != null || sheet != Sheet.None || showTabs || !tab.showHome) {
         when {
@@ -103,12 +113,14 @@ fun BrowserApp(c: BrowserController) {
 }
 
 @Composable
-private fun StatusBarIcons(darkIcons: Boolean) {
+private fun StatusBarIcons(darkIcons: Boolean, darkNavIcons: Boolean) {
     val view = LocalView.current
     if (view.isInEditMode) return
     SideEffect {
         val window = view.context.findActivity().window
-        WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkIcons
+        val controller = WindowCompat.getInsetsController(window, view)
+        controller.isAppearanceLightStatusBars = darkIcons
+        controller.isAppearanceLightNavigationBars = darkNavIcons
     }
 }
 

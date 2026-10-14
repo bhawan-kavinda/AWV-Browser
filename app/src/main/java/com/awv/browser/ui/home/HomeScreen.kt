@@ -48,6 +48,7 @@ import com.awv.browser.ui.components.IconDef
 import com.awv.browser.ui.components.Wallpaper
 import com.awv.browser.ui.components.pressable
 import com.awv.browser.ui.theme.Awv
+import com.awv.browser.ui.theme.AwvTheme
 import com.awv.browser.ui.theme.awvText
 
 // ---------- state & actions (wired to real data in later parts) ----------
@@ -110,13 +111,35 @@ private fun HomeContent(
         Omnibox(a, shieldOn)
         StatsCard(stats, a.onStats, Modifier.padding(top = 16.dp))
         if (isPrivate) PrivateBadge(Modifier.padding(start = 4.dp, top = 24.dp))
-        BasicText(
-            "Browse fast.\nStay private.",
-            Modifier.padding(start = 4.dp, end = 4.dp, top = if (isPrivate) 12.dp else 28.dp),
-            style = awvText(36, FontWeight.ExtraBold, Color.White, ls = -1f, lh = 38)
-        )
+        Row(
+            Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = if (isPrivate) 12.dp else 28.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            BasicText(
+                "Browse fast.\nStay private.",
+                Modifier.weight(1f),
+                style = awvText(36, FontWeight.ExtraBold, Color.White, ls = -1f, lh = 38)
+            )
+            ThemeToggle()
+        }
         Spacer(Modifier.weight(1f).height(12.dp))
         ShortcutGrid(shortcuts, a)
+    }
+}
+
+/** Dark / light switch. Shows the sun while dark mode is on (tap -> light) and the moon while light (tap -> dark). */
+@Composable
+private fun ThemeToggle() {
+    val dark = AwvTheme.dark
+    Box(
+        Modifier
+            .size(44.dp)
+            .background(Color.White.copy(alpha = .16f), CircleShape)
+            .border(1.dp, Color.White.copy(alpha = .24f), CircleShape)
+            .pressable(label = if (dark) "Switch to light mode" else "Switch to dark mode", onClick = AwvTheme::toggle),
+        contentAlignment = Alignment.Center
+    ) {
+        AwvIcon(if (dark) AwvIcons.Sun else AwvIcons.Moon, size = 22.dp, tint = Color.White, strokeWidth = 1.9f)
     }
 }
 
@@ -149,7 +172,7 @@ private fun Omnibox(a: HomeActions, shieldOn: Boolean) {
             .fillMaxWidth()
             .height(52.dp)
             .shadow(14.dp, shape, ambientColor = Awv.Shadow, spotColor = Awv.Shadow)
-            .background(Color.White, shape)
+            .background(Awv.Card, shape)
             .padding(start = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -286,7 +309,7 @@ private fun Tile(
         } else {
             Modifier.size(62.dp)
                 .shadow(8.dp, shape, ambientColor = Awv.Shadow, spotColor = Awv.Shadow)
-                .background(Color.White, shape)
+                .background(Awv.Card, shape)
         }
         Box(box, contentAlignment = Alignment.Center) { icon() }
         BasicText(
@@ -301,7 +324,7 @@ private fun Tile(
 
 @Composable
 fun BottomBar(tabCount: Int, canGoBack: Boolean, canGoForward: Boolean, isPrivate: Boolean, a: HomeActions) {
-    Column(Modifier.fillMaxWidth().background(Color.White).navigationBarsPadding()) {
+    Column(Modifier.fillMaxWidth().background(Awv.Card).navigationBarsPadding()) {
         Box(Modifier.fillMaxWidth().height(1.dp).background(Awv.Line))
         Row(
             Modifier.fillMaxWidth().height(67.dp).padding(horizontal = 10.dp),

@@ -101,6 +101,13 @@ object AwvIcons {
         p("M5 7h14M10 7V4.5h4V7M7 7l.8 12.2a1 1 0 0 0 1 .8h6.4a1 1 0 0 0 1-.8L17 7", Fill.Soft),
         p("M10.5 11v5M13.5 11v5")
     )
+    val Sun = icon(
+        circle(12f, 12f, 4f, Fill.Soft),
+        p("M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6")
+    )
+    val Moon = icon(
+        p("M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z", Fill.Soft)
+    )
     val Settings = icon(
         circle(12f, 12f, 3f, Fill.Soft),
         p("M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8")

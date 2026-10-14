@@ -263,7 +263,7 @@ private fun Row2(
     Row(
         Modifier
             .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(18.dp))
+            .background(Awv.Card, RoundedCornerShape(18.dp))
             .tappable(label = title, onClick = onClick)
             .padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -298,7 +298,7 @@ private fun Empty(icon: IconDef, title: String, hint: String) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
     ) {
-        Box(Modifier.size(84.dp).background(Color.White, CircleShape), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(84.dp).background(Awv.Card, CircleShape), contentAlignment = Alignment.Center) {
             AwvIcon(icon, size = 40.dp, tint = Awv.Purple, strokeWidth = 1.6f)
         }
         BasicText(title, style = awvText(18, FontWeight.ExtraBold, Awv.Ink))

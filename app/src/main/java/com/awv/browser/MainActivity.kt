@@ -8,12 +8,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.awv.browser.browser.BrowserController
 import com.awv.browser.ui.browser.BrowserApp
+import com.awv.browser.ui.theme.AwvTheme
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var browser: BrowserController
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AwvTheme.init(this) // saved light/dark choice, otherwise the device default
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
