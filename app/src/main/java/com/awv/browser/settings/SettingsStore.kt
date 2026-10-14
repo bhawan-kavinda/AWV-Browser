@@ -18,11 +18,14 @@ enum class SearchEngine(val label: String, val searchUrl: String) {
 class SettingsStore(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
-    var engine by mutableStateOf(readEngine())
-        private set
+    // Backing state is private, so the only public setter is setEngine() below (no JVM signature clash).
+    private var engineState by mutableStateOf(readEngine())
+
+    val engine: SearchEngine
+        get() = engineState
 
     fun setEngine(value: SearchEngine) {
-        engine = value
+        engineState = value
         prefs.edit().putString("engine", value.name).apply()
     }
 
