@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,7 +39,7 @@ import com.awv.browser.ui.theme.Awv
 import com.awv.browser.ui.theme.awvText
 
 /** Order matters: BrowserApp treats everything from Bookmarks onwards as a full-screen page. */
-enum class Sheet { None, Menu, Bookmarks, History, Downloads }
+enum class Sheet { None, Menu, Shield, Bookmarks, History, Downloads }
 
 @Composable
 fun MenuSheet(
@@ -90,6 +91,15 @@ fun MenuSheet(
                 Tile("Bookmarks", AwvIcons.Bookmark) { onOpen(Sheet.Bookmarks) }
                 Tile("History", AwvIcons.History) { onOpen(Sheet.History) }
                 Tile("Downloads", AwvIcons.Download) { onOpen(Sheet.Downloads) }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                val shieldOn = c.privacy.shieldOn
+                Tile(if (shieldOn) "Shield on" else "Shield off", AwvIcons.Shield, active = shieldOn) {
+                    c.toggleShield()
+                    onDismiss()
+                }
+                Spacer(Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
             }
         }
     }

@@ -27,6 +27,12 @@ class BrowserTab(val id: Int, val isPrivate: Boolean) {
     /** Desktop-site mode (desktop user-agent + wide viewport). */
     var desktop by mutableStateOf(false)
 
+    /** Ads / trackers blocked on the page currently loaded in this tab. */
+    var blockedCount by mutableIntStateOf(0)
+
+    /** Host of the page being loaded. Read from WebView IO threads by the blocker, so not Compose state. */
+    @Volatile var pageHost: String = ""
+
     /** Last URL written to history, so reloads / SPA updates are not logged twice. */
     var loggedUrl: String? = null
 

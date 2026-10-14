@@ -12,6 +12,8 @@ import android.net.Uri
 import android.net.http.SslError
 import android.os.Build
 import android.os.Environment
+import android.os.Handler
+import android.os.Looper
 import android.os.Message
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +23,7 @@ import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.URLUtil
@@ -33,14 +36,20 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.webkit.ProfileStore
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import com.awv.browser.data.AwvDb
 import com.awv.browser.data.Bookmark
 import com.awv.browser.data.HistoryEntry
+import com.awv.browser.privacy.Blocker
+import com.awv.browser.privacy.PrivacyStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.io.ByteArrayInputStream
 
 /**
  * Owns every tab and its WebView. Lives as long as MainActivity
@@ -70,6 +79,23 @@ class BrowserController(private val activity: Activity) {
     val db: AwvDb = AwvDb.get(activity)
     private val io = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /** Shield on/off + weekly stats, and the ad/tracker filter list. */
+    val privacy = PrivacyStore(activity)
+    private val blocker = Blocker(activity)
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    /**
+     * true = this device's WebView supports separate profiles, so Private tabs get their own cookie jar,
+     * storage and cache that are wiped when the last Private tab closes. false = older WebView:
+     * Private tabs still keep no history and use no cache, but cookies are shared with normal tabs.
+     */
+    var privateIsolated: Boolean = try {
+        WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE)
+    } catch (e: Throwable) {
+        false
+    }
+        private set
+
     /** Same Chrome version as [baseUserAgent], but a desktop (Linux) platform string. */
     private val desktopUserAgent: String = run {
         val v = Regex("Chrome/(\\d+)").find(baseUserAgent)?.groupValues?.get(1) ?: "124"
@@ -79,6 +105,7 @@ class BrowserController(private val activity: Activity) {
     val active: BrowserTab get() = tabs.first { it.id == activeId }
 
     init {
+        wipePrivateProfile() // leftovers from a previous run that was killed while Private tabs were open
         newTab(isPrivate = false)
     }
 
@@ -144,6 +171,7 @@ class BrowserController(private val activity: Activity) {
         val webView = tab.webView ?: createWebView(tab)
         tab.error = null
         tab.url = url
+        tab.pageHost = hostOf(url)
         tab.title = ""
         tab.progress = 5
         tab.loading = true
@@ -228,7 +256,7 @@ class BrowserController(private val activity: Activity) {
 
     // ------------------------------------------------------------- downloads
 
-    private fun startDownload(url: String, userAgent: String?, disposition: String?, mime: String?) {
+    private fun startDownload(tab: BrowserTab, url: String, userAgent: String?, disposition: String?, mime: String?) {
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             toast("This kind of download isn't supported")
             return
@@ -240,7 +268,7 @@ class BrowserController(private val activity: Activity) {
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .addRequestHeader("User-Agent", userAgent ?: baseUserAgent)
             if (!mime.isNullOrBlank()) request.setMimeType(mime)
-            CookieManager.getInstance().getCookie(url)?.let { request.addRequestHeader("Cookie", it) }
+            cookieManagerFor(tab).getCookie(url)?.let { request.addRequestHeader("Cookie", it) }
             // Public Downloads folder needs no permission on Android 10+; older versions use the app's own folder.
             if (Build.VERSION.SDK_INT >= 29) {
                 request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
@@ -255,6 +283,60 @@ class BrowserController(private val activity: Activity) {
     }
 
     fun toast(message: String) = Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+
+    // ---------------------------------------------------------------- privacy
+
+    /** Shield button / menu tile. Reloads the open page so the change takes effect straight away. */
+    fun toggleShield() {
+        privacy.toggleShield()
+        toast(if (privacy.shieldOn) "Shield on" else "Shield off")
+        val tab = active
+        if (!tab.showHome && tab.error == null && tab.url.isNotBlank()) tab.webView?.reload()
+    }
+
+    private fun hostOf(url: String): String = Uri.parse(url).host?.lowercase().orEmpty()
+
+    /** Cookie jar that belongs to this tab: the Private profile's for Private tabs, the normal one otherwise. */
+    private fun cookieManagerFor(tab: BrowserTab): CookieManager {
+        if (tab.isPrivate && privateIsolated) {
+            try {
+                return ProfileStore.getInstance().getOrCreateProfile(PRIVATE_PROFILE).cookieManager
+            } catch (e: Exception) {
+                // fall through
+            }
+        }
+        return CookieManager.getInstance()
+    }
+
+    /** Must run before anything else touches the new WebView. */
+    private fun attachPrivateProfile(webView: WebView) {
+        if (!privateIsolated) return
+        try {
+            ProfileStore.getInstance().getOrCreateProfile(PRIVATE_PROFILE)
+            WebViewCompat.setProfile(webView, PRIVATE_PROFILE)
+        } catch (e: Exception) {
+            privateIsolated = false
+            toast("Private tabs share cookies with normal tabs on this device")
+        }
+    }
+
+    /** Clears cookies + site data of the Private profile and deletes it. Safe to call when it doesn't exist. */
+    private fun wipePrivateProfile() {
+        if (!privateIsolated) return
+        try {
+            val store = ProfileStore.getInstance()
+            val profile = store.getProfile(PRIVATE_PROFILE) ?: return
+            try {
+                profile.cookieManager.removeAllCookies(null)
+                profile.webStorage.deleteAllData()
+            } catch (e: Exception) {
+                // keep going: deleting the profile below removes its data too
+            }
+            store.deleteProfile(PRIVATE_PROFILE) // throws while a WebView still uses it; retried on the next close / launch
+        } catch (e: Exception) {
+            // Best effort.
+        }
+    }
 
     // --------------------------------------------------------------- lifecycle
 
@@ -272,10 +354,18 @@ class BrowserController(private val activity: Activity) {
         io.cancel()
         tabs.toList().forEach { release(it) }
         flushGraveyard()
+        wipePrivateProfile()
     }
 
     private fun release(tab: BrowserTab) {
-        tab.webView?.let { graveyard.add(it) }
+        tab.webView?.let { webView ->
+            if (tab.isPrivate) {
+                webView.clearCache(true)
+                webView.clearHistory()
+                webView.clearFormData()
+            }
+            graveyard.add(webView)
+        }
         tab.webView = null
     }
 
@@ -289,6 +379,7 @@ class BrowserController(private val activity: Activity) {
             webView.stopLoading()
             webView.destroy()
         }
+        if (tabs.none { it.isPrivate }) wipePrivateProfile()
     }
 
     fun exitFullscreen() {
@@ -322,6 +413,7 @@ class BrowserController(private val activity: Activity) {
     @SuppressLint("SetJavaScriptEnabled")
     private fun createWebView(tab: BrowserTab): WebView {
         val webView = WebView(activity)
+        if (tab.isPrivate) attachPrivateProfile(webView)
         webView.layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
@@ -340,9 +432,10 @@ class BrowserController(private val activity: Activity) {
             useWideViewPort = true
             loadWithOverviewMode = true
             mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+            if (tab.isPrivate) cacheMode = WebSettings.LOAD_NO_CACHE
         }
         applyMode(webView, tab)
-        webView.setDownloadListener { url, ua, disposition, mime, _ -> startDownload(url, ua, disposition, mime) }
+        webView.setDownloadListener { url, ua, disposition, mime, _ -> startDownload(tab, url, ua, disposition, mime) }
         webView.webViewClient = AwvClient(tab)
         webView.webChromeClient = AwvChrome(tab)
         tab.webView = webView
@@ -396,8 +489,27 @@ class BrowserController(private val activity: Activity) {
             }
         }
 
+        /** Ad / tracker blocking. Runs on a WebView IO thread; the main page itself is never blocked. */
+        override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+            if (request == null || request.isForMainFrame || !privacy.shieldFlag) return null
+            val scheme = request.url.scheme?.lowercase()
+            if (scheme != "http" && scheme != "https") return null
+            if (!blocker.shouldBlock(request.url, tab.pageHost)) return null
+            mainHandler.post {
+                tab.blockedCount++
+                privacy.recordBlocked()
+            }
+            return WebResourceResponse(
+                "text/plain", "utf-8", 403, "Blocked", emptyMap(), ByteArrayInputStream(ByteArray(0))
+            )
+        }
+
         override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-            if (url != null) tab.url = url
+            if (url != null) {
+                tab.url = url
+                tab.pageHost = hostOf(url)
+            }
+            tab.blockedCount = 0
             tab.error = null
             tab.loading = true
             if (tab.progress >= 100) tab.progress = 5
@@ -418,7 +530,10 @@ class BrowserController(private val activity: Activity) {
         }
 
         override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
-            if (url != null && tab.error == null) tab.url = url
+            if (url != null && tab.error == null) {
+                tab.url = url
+                tab.pageHost = hostOf(url)
+            }
             syncNavState(tab, view)
         }
 
@@ -503,6 +618,7 @@ class BrowserController(private val activity: Activity) {
     }
 
     private companion object {
+        const val PRIVATE_PROFILE = "awv_private"
         const val THUMB_W = 360
         // Forces a 1024px-wide layout so mobile-optimised sites show their desktop version.
         const val DESKTOP_VIEWPORT_JS =

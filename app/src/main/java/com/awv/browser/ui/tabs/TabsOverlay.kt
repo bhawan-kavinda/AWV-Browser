@@ -95,7 +95,7 @@ fun TabsOverlay(c: BrowserController, onDone: () -> Unit) {
         }
 
         if (list.isEmpty()) {
-            EmptyPrivate(Modifier.weight(1f))
+            EmptyPrivate(Modifier.weight(1f), c.privateIsolated)
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -165,7 +165,7 @@ private fun Seg(label: String, selected: Boolean, modifier: Modifier, onClick: (
 }
 
 @Composable
-private fun EmptyPrivate(modifier: Modifier) {
+private fun EmptyPrivate(modifier: Modifier, isolated: Boolean) {
     Column(
         modifier.fillMaxWidth().padding(horizontal = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -177,7 +177,8 @@ private fun EmptyPrivate(modifier: Modifier) {
         ) { AwvIcon(AwvIcons.Private, size = 52.dp, tint = Awv.Purple, strokeWidth = 1.5f) }
         BasicText("No private tabs", style = awvText(20, FontWeight.ExtraBold, Awv.Ink))
         BasicText(
-            "Private tabs leave no history, cookies or site data on this device.",
+            if (isolated) "Private tabs leave no history, cookies or site data on this device."
+            else "Private tabs leave no history and use no cache. Cookies are shared with normal tabs on this device.",
             style = awvText(14, FontWeight.Normal, Awv.Muted, lh = 21).copy(textAlign = TextAlign.Center)
         )
     }

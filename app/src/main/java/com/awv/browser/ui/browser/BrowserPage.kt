@@ -64,7 +64,7 @@ fun BrowserPage(c: BrowserController, tab: BrowserTab, actions: HomeActions) {
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
     Column(Modifier.fillMaxSize().background(Color.White).imePadding()) {
-        PageTopBar(c, tab)
+        PageTopBar(c, tab, actions.onShield)
         Box(Modifier.weight(1f).fillMaxWidth()) {
             val webView = tab.webView
             if (webView != null) {
@@ -96,7 +96,7 @@ fun BrowserPage(c: BrowserController, tab: BrowserTab, actions: HomeActions) {
 // ---------- top bar ----------
 
 @Composable
-private fun PageTopBar(c: BrowserController, tab: BrowserTab) {
+private fun PageTopBar(c: BrowserController, tab: BrowserTab, onShield: () -> Unit) {
     val dark = tab.isPrivate
     val barBg = if (dark) Awv.Bg else Color.White
     val pillBg = if (dark) Color.White.copy(alpha = .14f) else Awv.Surface
@@ -172,6 +172,39 @@ private fun PageTopBar(c: BrowserController, tab: BrowserTab) {
                     }
                 }
             )
+
+            val shieldOn = c.privacy.shieldOn
+            Box(
+                Modifier.size(40.dp).pressable(
+                    label = if (shieldOn) "Shield on, ${tab.blockedCount} blocked" else "Shield off",
+                    onClick = onShield
+                ),
+                contentAlignment = Alignment.Center
+            ) {
+                AwvIcon(
+                    AwvIcons.Shield,
+                    size = 22.dp,
+                    tint = if (!shieldOn) hintColor else if (dark) Awv.Coral else Awv.Brand,
+                    strokeWidth = 1.9f
+                )
+                if (shieldOn && tab.blockedCount > 0) {
+                    Box(
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 3.dp, end = 1.dp)
+                            .height(16.dp)
+                            .background(Awv.Brand, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        BasicText(
+                            if (tab.blockedCount > 99) "99+" else tab.blockedCount.toString(),
+                            style = awvText(10, FontWeight.ExtraBold, Color.White),
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
 
             Box(
                 Modifier.size(40.dp).pressable(

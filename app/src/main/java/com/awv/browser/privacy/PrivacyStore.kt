@@ -21,6 +21,10 @@ class PrivacyStore(context: Context) {
     var stats by mutableStateOf(PrivacyStats())
         private set
 
+    /** Thread-safe copy of [shieldOn] for WebView IO threads (shouldInterceptRequest). */
+    @Volatile var shieldFlag: Boolean = shieldOn
+        private set
+
     private var week = prefs.getInt("week", currentWeek())
     private var blocked = prefs.getInt("blocked", 0)
 
@@ -31,6 +35,7 @@ class PrivacyStore(context: Context) {
 
     fun toggleShield() {
         shieldOn = !shieldOn
+        shieldFlag = shieldOn
         prefs.edit().putBoolean("shield", shieldOn).apply()
     }
 

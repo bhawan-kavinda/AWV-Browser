@@ -33,6 +33,7 @@ import com.awv.browser.ui.menu.DownloadsScreen
 import com.awv.browser.ui.menu.HistoryScreen
 import com.awv.browser.ui.menu.MenuSheet
 import com.awv.browser.ui.menu.Sheet
+import com.awv.browser.ui.menu.ShieldSheet
 import com.awv.browser.ui.tabs.TabsOverlay
 import com.awv.browser.ui.theme.Awv
 
@@ -50,6 +51,8 @@ fun BrowserApp(c: BrowserController) {
         onForward = c::goForward,
         onNewTab = { c.newTab(c.active.isPrivate) },
         onMenu = { sheet = Sheet.Menu },
+        onShield = { sheet = Sheet.Shield },
+        onStats = { sheet = Sheet.Shield },
         onTabs = {
             c.captureThumbnail(c.active)
             showTabs = true
@@ -75,6 +78,8 @@ fun BrowserApp(c: BrowserController) {
                     canGoBack = c.canGoBack(tab),
                     canGoForward = c.canGoForward(tab),
                     isPrivate = tab.isPrivate,
+                    stats = c.privacy.stats,
+                    shieldOn = c.privacy.shieldOn,
                     actions = actions
                 )
             } else {
@@ -84,6 +89,7 @@ fun BrowserApp(c: BrowserController) {
         if (showTabs) TabsOverlay(c) { showTabs = false }
         when (sheet) {
             Sheet.Menu -> MenuSheet(c, tab, onDismiss = { sheet = Sheet.None }, onOpen = { sheet = it })
+            Sheet.Shield -> ShieldSheet(c, tab) { sheet = Sheet.None }
             Sheet.Bookmarks -> BookmarksScreen(c) { sheet = Sheet.None }
             Sheet.History -> HistoryScreen(c) { sheet = Sheet.None }
             Sheet.Downloads -> DownloadsScreen { sheet = Sheet.None }
