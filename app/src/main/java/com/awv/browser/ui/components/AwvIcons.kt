@@ -64,8 +64,8 @@ object AwvIcons {
     )
     val Private = icon(
         p("M3 11h18M6 11l1.6-6h8.8L18 11", Fill.Soft),
-        circle(8f, 16.5f, 2.6),
-        circle(16f, 16.5f, 2.6),
+        circle(8f, 16.5f, 2.6f),
+        circle(16f, 16.5f, 2.6f),
         p("M10.6 16.2h2.8")
     )
     val Bookmark = icon(p("M7 3.5h10a1 1 0 0 1 1 1V20l-6-4.2L6 20V4.5a1 1 0 0 1 1-1z", Fill.Soft))
