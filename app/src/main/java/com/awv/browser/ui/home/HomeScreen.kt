@@ -80,12 +80,13 @@ fun HomeScreen(
     canGoBack: Boolean = true,
     canGoForward: Boolean = false,
     isPrivate: Boolean = false,
+    shieldOn: Boolean = true,
     actions: HomeActions = HomeActions()
 ) {
     Box(Modifier.fillMaxSize().background(Awv.Bg)) {
         Wallpaper()
         Column(Modifier.fillMaxSize()) {
-            HomeContent(stats, shortcuts, isPrivate, actions, Modifier.weight(1f))
+            HomeContent(stats, shortcuts, isPrivate, shieldOn, actions, Modifier.weight(1f))
             BottomBar(tabCount, canGoBack, canGoForward, isPrivate, actions)
         }
     }
@@ -96,6 +97,7 @@ private fun HomeContent(
     stats: PrivacyStats,
     shortcuts: List<Shortcut>,
     isPrivate: Boolean,
+    shieldOn: Boolean,
     a: HomeActions,
     modifier: Modifier
 ) {
@@ -105,7 +107,7 @@ private fun HomeContent(
             .statusBarsPadding()
             .padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 22.dp)
     ) {
-        Omnibox(a)
+        Omnibox(a, shieldOn)
         StatsCard(stats, a.onStats, Modifier.padding(top = 16.dp))
         if (isPrivate) PrivateBadge(Modifier.padding(start = 4.dp, top = 24.dp))
         BasicText(
@@ -138,7 +140,7 @@ private fun PrivateBadge(modifier: Modifier) {
 // ---------- omnibox ----------
 
 @Composable
-private fun Omnibox(a: HomeActions) {
+private fun Omnibox(a: HomeActions, shieldOn: Boolean) {
     var query by rememberSaveable { mutableStateOf("") }
     val focus = LocalFocusManager.current
     val shape = RoundedCornerShape(26.dp)
@@ -153,10 +155,10 @@ private fun Omnibox(a: HomeActions) {
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
-            Modifier.size(40.dp).background(Awv.BrandSoft, CircleShape)
-                .pressable(label = "Site shield", onClick = a.onShield),
+            Modifier.size(40.dp).background(if (shieldOn) Awv.BrandSoft else Awv.Line, CircleShape)
+                .pressable(label = if (shieldOn) "Shield on" else "Shield off", onClick = a.onShield),
             contentAlignment = Alignment.Center
-        ) { AwvIcon(AwvIcons.Shield, size = 22.dp, tint = Awv.Brand, strokeWidth = 1.9f) }
+        ) { AwvIcon(AwvIcons.Shield, size = 22.dp, tint = if (shieldOn) Awv.Brand else Awv.Muted, strokeWidth = 1.9f) }
 
         BasicTextField(
             value = query,

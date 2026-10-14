@@ -68,7 +68,7 @@ fun BookmarksScreen(c: BrowserController, onClose: () -> Unit) {
     LibraryPage("Bookmarks", onClose) {
         if (list.isEmpty()) {
             Empty(AwvIcons.Bookmark, "No bookmarks yet", "Open a page, then tap Menu → Bookmark.")
-        } else LazyColumn(listPad, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        } else LazyColumn(contentPadding = listPad, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(list, key = { it.url }) { b ->
                 Row2(
                     title = b.title.ifBlank { UrlUtils.displayHost(b.url) },
@@ -99,7 +99,7 @@ fun HistoryScreen(c: BrowserController, onClose: () -> Unit) {
     ) {
         if (list.isEmpty()) {
             Empty(AwvIcons.History, "No history", "Pages you visit appear here. Private tabs are never saved.")
-        } else LazyColumn(listPad, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        } else LazyColumn(contentPadding = listPad, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             groups.forEach { (day, entries) ->
                 item(key = "h$day") {
                     BasicText(day, Modifier.padding(top = 10.dp, start = 4.dp), style = awvText(13, FontWeight.ExtraBold, Awv.Muted))
@@ -170,7 +170,7 @@ fun DownloadsScreen(onClose: () -> Unit) {
         val list = items
         if (list != null && list.isEmpty()) {
             Empty(AwvIcons.Download, "No downloads", "Files you download from the web appear here.")
-        } else LazyColumn(listPad, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        } else LazyColumn(contentPadding = listPad, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(list.orEmpty(), key = { it.id }) { d ->
                 val ok = d.status == DownloadManager.STATUS_SUCCESSFUL
                 val running = d.status == DownloadManager.STATUS_RUNNING
