@@ -108,6 +108,11 @@ object AwvIcons {
     val Moon = icon(
         p("M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z", Fill.Soft)
     )
+    val Check = icon(p("M5 12.5l4.5 4.5L19 7.5"))
+    val Search = icon(
+        circle(11f, 11f, 6.5f, Fill.Soft),
+        p("M16 16l4.5 4.5")
+    )
     val Settings = icon(
         circle(12f, 12f, 3f, Fill.Soft),
         p("M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8")

@@ -12,19 +12,21 @@ object UrlUtils {
         RegexOption.IGNORE_CASE
     )
 
-    /** Turns whatever the user typed into a loadable URL: address -> https/http URL, anything else -> web search. */
-    fun resolve(input: String): String {
+    /** Text that is a web address -> loadable http/https URL; anything else (search words) -> null. */
+    fun asAddress(input: String): String? {
         val text = input.trim()
-        val hasSpace = text.any { it.isWhitespace() }
-        if (text.isNotEmpty() && !hasSpace) {
-            val lower = text.lowercase()
-            if (lower.startsWith("http://") || lower.startsWith("https://")) return text
-            if (localAddress.matches(text)) return "http://$text"
-            val looksLikeEmail = '@' in text && '/' !in text
-            if (!looksLikeEmail && Patterns.WEB_URL.matcher(text).matches()) return "https://$text"
-        }
-        return SEARCH_URL + URLEncoder.encode(text, "UTF-8")
+        if (text.isEmpty() || text.any { it.isWhitespace() }) return null
+        val lower = text.lowercase()
+        if (lower.startsWith("http://") || lower.startsWith("https://")) return text
+        if (localAddress.matches(text)) return "http://$text"
+        val looksLikeEmail = '@' in text && '/' !in text
+        if (!looksLikeEmail && Patterns.WEB_URL.matcher(text).matches()) return "https://$text"
+        return null
     }
+
+    /** Turns whatever the user typed into a loadable URL: address -> https/http URL, anything else -> web search. */
+    fun resolve(input: String, searchUrl: String = SEARCH_URL): String =
+        asAddress(input) ?: (searchUrl + URLEncoder.encode(input.trim(), "UTF-8"))
 
     /** "https://www.example.com/a/b" -> "example.com" (falls back to the raw text). */
     fun displayHost(url: String): String {

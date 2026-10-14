@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Awv icon: coral shield (same shape as the in-app Shield icon) with a white "A". Kept inside the 66dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="2.2"
+        android:scaleY="2.2"
+        android:translateX="27.6"
+        android:translateY="27.6">
+        <path android:pathData="M12 3l7.2 2.8v5.6c0 4.6-3 8-7.2 9.6-4.2-1.6-7.2-5-7.2-9.6V5.8z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="12"
+                    android:startY="3"
+                    android:endX="12"
+                    android:endY="21"
+                    android:type="linear">
+                    <item android:color="#FFFF8A4C" android:offset="0" />
+                    <item android:color="#FFE8381B" android:offset="1" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M9 15.6L12 8.6L15 15.6M10.2 13.1H13.8"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>

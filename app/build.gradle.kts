@@ -13,8 +13,8 @@ android {
         applicationId = "com.awv.browser"
         minSdk = 24
         targetSdk = 34
-        versionCode = 4
-        versionName = "0.4.0"
+        versionCode = 5
+        versionName = "1.0.0"
     }
     buildTypes {
         release { isMinifyEnabled = false }
@@ -35,6 +35,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.webkit:webkit:1.12.1")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 
     val room = "2.6.1"
     implementation("androidx.room:room-runtime:$room")

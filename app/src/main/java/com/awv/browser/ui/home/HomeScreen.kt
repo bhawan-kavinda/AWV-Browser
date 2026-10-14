@@ -63,6 +63,7 @@ class HomeActions(
     val onShield: () -> Unit = {},
     val onStats: () -> Unit = {},
     val onShortcut: (Shortcut) -> Unit = {},
+    val onShortcutLongPress: (Shortcut) -> Unit = {},
     val onAddShortcut: () -> Unit = {},
     val onBack: () -> Unit = {},
     val onForward: () -> Unit = {},
@@ -77,6 +78,7 @@ class HomeActions(
 fun HomeScreen(
     stats: PrivacyStats = PrivacyStats(),
     shortcuts: List<Shortcut> = emptyList(),
+    canAddShortcut: Boolean = true,
     tabCount: Int = 1,
     canGoBack: Boolean = true,
     canGoForward: Boolean = false,
@@ -87,7 +89,7 @@ fun HomeScreen(
     Box(Modifier.fillMaxSize().background(Awv.Bg)) {
         Wallpaper()
         Column(Modifier.fillMaxSize()) {
-            HomeContent(stats, shortcuts, isPrivate, shieldOn, actions, Modifier.weight(1f))
+            HomeContent(stats, shortcuts, canAddShortcut, isPrivate, shieldOn, actions, Modifier.weight(1f))
             BottomBar(tabCount, canGoBack, canGoForward, isPrivate, actions)
         }
     }
@@ -97,6 +99,7 @@ fun HomeScreen(
 private fun HomeContent(
     stats: PrivacyStats,
     shortcuts: List<Shortcut>,
+    canAddShortcut: Boolean,
     isPrivate: Boolean,
     shieldOn: Boolean,
     a: HomeActions,
@@ -123,7 +126,7 @@ private fun HomeContent(
             ThemeToggle()
         }
         Spacer(Modifier.weight(1f).height(12.dp))
-        ShortcutGrid(shortcuts, a)
+        ShortcutGrid(shortcuts, canAddShortcut, a)
     }
 }
 
@@ -259,18 +262,22 @@ private fun RowScope.Stat(value: String, label: String) {
     }
 }
 
-// ---------- shortcut tiles (user-added; empty until Part 5) ----------
+// ---------- shortcut tiles (added by the user; tap = open, long-press = remove) ----------
 
 @Composable
-private fun ColumnScope.ShortcutGrid(shortcuts: List<Shortcut>, a: HomeActions) {
-    val total = shortcuts.size + 1 // + "Add"
+private fun ColumnScope.ShortcutGrid(shortcuts: List<Shortcut>, canAdd: Boolean, a: HomeActions) {
+    val total = shortcuts.size + if (canAdd) 1 else 0 // + "Add"
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         (0 until total).chunked(4).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { i ->
                     if (i < shortcuts.size) {
                         val s = shortcuts[i]
-                        Tile(s.title, Modifier.weight(1f), onClick = { a.onShortcut(s) }) {
+                        Tile(
+                            s.title, Modifier.weight(1f),
+                            onLongClick = { a.onShortcutLongPress(s) },
+                            onClick = { a.onShortcut(s) }
+                        ) {
                             BasicText(
                                 s.title.take(1).uppercase(),
                                 style = awvText(24, FontWeight.ExtraBold, Awv.Brand)
@@ -293,12 +300,13 @@ private fun Tile(
     label: String,
     modifier: Modifier,
     add: Boolean = false,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
     val shape = RoundedCornerShape(20.dp)
     Column(
-        modifier.pressable(label = label, onClick = onClick),
+        modifier.pressable(label = label, onLongClick = onLongClick, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {

@@ -27,17 +27,29 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.awv.browser.browser.BrowserController
+import com.awv.browser.browser.UrlUtils
+import com.awv.browser.ui.components.AddShortcutDialog
+import com.awv.browser.ui.components.ConfirmDialog
 import com.awv.browser.ui.home.HomeActions
 import com.awv.browser.ui.home.HomeScreen
+import com.awv.browser.ui.home.Shortcut
 import com.awv.browser.ui.menu.BookmarksScreen
 import com.awv.browser.ui.menu.DownloadsScreen
 import com.awv.browser.ui.menu.HistoryScreen
 import com.awv.browser.ui.menu.MenuSheet
+import com.awv.browser.ui.menu.SettingsScreen
 import com.awv.browser.ui.menu.Sheet
 import com.awv.browser.ui.menu.ShieldSheet
 import com.awv.browser.ui.tabs.TabsOverlay
 import com.awv.browser.ui.theme.Awv
 import com.awv.browser.ui.theme.AwvTheme
+
+/** Dialogs shown above everything else. */
+private sealed interface Overlay {
+    object AddShortcut : Overlay
+    class RemoveShortcut(val shortcut: Shortcut) : Overlay
+    class OpenLink(val url: String) : Overlay
+}
 
 /** Root screen: start page or web page for the active tab, plus the tabs overlay and video fullscreen. */
 @Composable
@@ -45,10 +57,17 @@ fun BrowserApp(c: BrowserController) {
     val tab = c.active
     var showTabs by remember { mutableStateOf(false) }
     var sheet by remember { mutableStateOf(Sheet.None) }
+    var overlay by remember { mutableStateOf<Overlay?>(null) }
     val fullscreen = c.customView
+    val extras = rememberExtraActions(c) { link -> overlay = Overlay.OpenLink(link) }
 
     val actions = HomeActions(
         onSubmit = { c.load(c.active, it) },
+        onVoice = extras.voice,
+        onScan = extras.scan,
+        onShortcut = { c.load(c.active, it.url) },
+        onShortcutLongPress = { overlay = Overlay.RemoveShortcut(it) },
+        onAddShortcut = { overlay = Overlay.AddShortcut },
         onBack = c::goBack,
         onForward = c::goForward,
         onNewTab = { c.newTab(c.active.isPrivate) },
@@ -89,6 +108,8 @@ fun BrowserApp(c: BrowserController) {
                     canGoForward = c.canGoForward(tab),
                     isPrivate = tab.isPrivate,
                     stats = c.privacy.stats,
+                    shortcuts = c.shortcuts.items.toList(),
+                    canAddShortcut = !c.shortcuts.isFull,
                     shieldOn = c.privacy.shieldOn,
                     actions = actions
                 )
@@ -103,7 +124,46 @@ fun BrowserApp(c: BrowserController) {
             Sheet.Bookmarks -> BookmarksScreen(c) { sheet = Sheet.None }
             Sheet.History -> HistoryScreen(c) { sheet = Sheet.None }
             Sheet.Downloads -> DownloadsScreen { sheet = Sheet.None }
+            Sheet.Settings -> SettingsScreen(c) { sheet = Sheet.None }
             Sheet.None -> Unit
+        }
+        when (val o = overlay) {
+            Overlay.AddShortcut -> AddShortcutDialog(
+                onSave = { name, address ->
+                    val url = UrlUtils.asAddress(address)
+                    when {
+                        url == null -> "Enter a website address, like example.com"
+                        !c.shortcuts.add(Shortcut(name.trim().ifBlank { UrlUtils.displayHost(url) }, url)) ->
+                            "This site is already on your start page"
+                        else -> {
+                            overlay = null
+                            null
+                        }
+                    }
+                },
+                onDismiss = { overlay = null }
+            )
+            is Overlay.RemoveShortcut -> ConfirmDialog(
+                title = "Remove \"${o.shortcut.title}\"?",
+                message = "It will be removed from your start page.",
+                confirmLabel = "Remove",
+                onConfirm = {
+                    c.shortcuts.remove(o.shortcut)
+                    overlay = null
+                },
+                onDismiss = { overlay = null }
+            )
+            is Overlay.OpenLink -> ConfirmDialog(
+                title = "Open this link?",
+                message = o.url,
+                confirmLabel = "Open",
+                onConfirm = {
+                    c.load(c.active, o.url)
+                    overlay = null
+                },
+                onDismiss = { overlay = null }
+            )
+            null -> Unit
         }
         if (fullscreen != null) FullscreenVideo(fullscreen)
     }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fallback for Android 7.x. Android 8+ uses mipmap-anydpi-v26/ic_launcher.xml instead. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#FF1B0F33"
+        android:pathData="M10 0h28a10 10 0 0 1 10 10v28a10 10 0 0 1-10 10H10A10 10 0 0 1 0 38V10A10 10 0 0 1 10 0z" />
+    <group
+        android:scaleX="1.15"
+        android:scaleY="1.15"
+        android:translateX="10.2"
+        android:translateY="10.2">
+        <path android:pathData="M12 3l7.2 2.8v5.6c0 4.6-3 8-7.2 9.6-4.2-1.6-7.2-5-7.2-9.6V5.8z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="12"
+                    android:startY="3"
+                    android:endX="12"
+                    android:endY="21"
+                    android:type="linear">
+                    <item android:color="#FFFF8A4C" android:offset="0" />
+                    <item android:color="#FFE8381B" android:offset="1" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M9 15.6L12 8.6L15 15.6M10.2 13.1H13.8"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.9"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
+</vector>

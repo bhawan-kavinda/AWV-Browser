@@ -25,6 +25,7 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
+import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.URLUtil
 import android.webkit.WebViewClient
@@ -42,8 +43,10 @@ import androidx.webkit.WebViewFeature
 import com.awv.browser.data.AwvDb
 import com.awv.browser.data.Bookmark
 import com.awv.browser.data.HistoryEntry
+import com.awv.browser.data.ShortcutStore
 import com.awv.browser.privacy.Blocker
 import com.awv.browser.privacy.PrivacyStore
+import com.awv.browser.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -83,6 +86,10 @@ class BrowserController(private val activity: Activity) {
     val privacy = PrivacyStore(activity)
     private val blocker = Blocker(activity)
     private val mainHandler = Handler(Looper.getMainLooper())
+
+    /** Search engine choice, and the start-page shortcut tiles. */
+    val settings = SettingsStore(activity)
+    val shortcuts = ShortcutStore(activity)
 
     /**
      * true = this device's WebView supports separate profiles, so Private tabs get their own cookie jar,
@@ -167,7 +174,7 @@ class BrowserController(private val activity: Activity) {
     /** Address-bar / omnibox input: URL or search text. */
     fun load(tab: BrowserTab, input: String) {
         if (input.isBlank()) return
-        val url = UrlUtils.resolve(input)
+        val url = UrlUtils.resolve(input, settings.engine.searchUrl)
         val webView = tab.webView ?: createWebView(tab)
         tab.error = null
         tab.url = url
@@ -295,6 +302,28 @@ class BrowserController(private val activity: Activity) {
     }
 
     private fun hostOf(url: String): String = Uri.parse(url).host?.lowercase().orEmpty()
+
+    /**
+     * Settings > Clear data. Works on the normal profile only: Private tabs keep nothing
+     * (their data is wiped when they close). Open pages stay on screen until reloaded.
+     */
+    fun clearData(history: Boolean, cookies: Boolean, cache: Boolean) {
+        if (history) io.launch { db.history().clear() }
+        if (cookies) {
+            val manager = CookieManager.getInstance()
+            manager.removeAllCookies(null)
+            manager.flush()
+            WebStorage.getInstance().deleteAllData()
+        }
+        if (cache) {
+            // The HTTP cache is shared by every normal WebView, so any of them can clear it.
+            val existing = tabs.firstOrNull { !it.isPrivate && it.webView != null }?.webView
+            val webView = existing ?: WebView(activity)
+            webView.clearCache(true)
+            if (existing == null) webView.destroy()
+        }
+        toast("Data cleared")
+    }
 
     /** Cookie jar that belongs to this tab: the Private profile's for Private tabs, the normal one otherwise. */
     private fun cookieManagerFor(tab: BrowserTab): CookieManager {

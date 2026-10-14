@@ -39,7 +39,7 @@ import com.awv.browser.ui.theme.Awv
 import com.awv.browser.ui.theme.awvText
 
 /** Order matters: BrowserApp treats everything from Bookmarks onwards as a full-screen page. */
-enum class Sheet { None, Menu, Shield, Bookmarks, History, Downloads }
+enum class Sheet { None, Menu, Shield, Bookmarks, History, Downloads, Settings }
 
 @Composable
 fun MenuSheet(
@@ -98,7 +98,7 @@ fun MenuSheet(
                     c.toggleShield()
                     onDismiss()
                 }
-                Spacer(Modifier.weight(1f))
+                Tile("Settings", AwvIcons.Settings) { onOpen(Sheet.Settings) }
                 Spacer(Modifier.weight(1f))
             }
         }

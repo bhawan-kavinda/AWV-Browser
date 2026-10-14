@@ -213,7 +213,7 @@ private fun openDownload(ctx: Context, dm: DownloadManager, id: Long) {
 private val listPad = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp)
 
 @Composable
-private fun LibraryPage(
+internal fun LibraryPage(
     title: String,
     onClose: () -> Unit,
     action: String? = null,
