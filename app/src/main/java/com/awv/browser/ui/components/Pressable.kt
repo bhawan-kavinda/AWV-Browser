@@ -33,3 +33,15 @@ fun Modifier.pressable(
         )
         .semantics { if (label != null) contentDescription = label }
 }
+
+/** Plain tap target (no scale animation, no ripple) for segmented controls etc. */
+fun Modifier.tappable(
+    label: String? = null,
+    role: Role = Role.Button,
+    onClick: () -> Unit
+): Modifier = composed {
+    val source = remember { MutableInteractionSource() }
+    this
+        .clickable(interactionSource = source, indication = null, role = role, onClick = onClick)
+        .semantics { if (label != null) contentDescription = label }
+}

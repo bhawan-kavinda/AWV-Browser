@@ -64,8 +64,8 @@ object AwvIcons {
     )
     val Private = icon(
         p("M3 11h18M6 11l1.6-6h8.8L18 11", Fill.Soft),
-        circle(8f, 16.5f, 2.6f),
-        circle(16f, 16.5f, 2.6f),
+        circle(8f, 16.5f, 2.6),
+        circle(16f, 16.5f, 2.6),
         p("M10.6 16.2h2.8")
     )
     val Bookmark = icon(p("M7 3.5h10a1 1 0 0 1 1 1V20l-6-4.2L6 20V4.5a1 1 0 0 1 1-1z", Fill.Soft))
@@ -80,6 +80,22 @@ object AwvIcons {
     val Desktop = icon(
         rect(3f, 4f, 18f, 12f, 2f, Fill.Soft),
         p("M8.5 20h7M12 16v4")
+    )
+    val Lock = icon(
+        rect(5f, 11f, 14f, 9.5f, 2.5f, Fill.Soft),
+        p("M8.5 11V8a3.5 3.5 0 0 1 7 0v3")
+    )
+    val LockOpen = icon(
+        rect(5f, 11f, 14f, 9.5f, 2.5f, Fill.Soft),
+        p("M8.5 11V8a3.5 3.5 0 0 1 6.6-1.6")
+    )
+    val Reload = icon(
+        p("M20 12a8 8 0 1 1-2.4-5.7L20 8.5"),
+        p("M20 4v4.5h-4.5")
+    )
+    val Globe = icon(
+        circle(12f, 12f, 9f, Fill.Soft),
+        p("M3 12h18M12 3c2.5 2.4 3.8 5.5 3.8 9s-1.3 6.6-3.8 9c-2.5-2.4-3.8-5.5-3.8-9s1.3-6.6 3.8-9z")
     )
     val Settings = icon(
         circle(12f, 12f, 3f, Fill.Soft),

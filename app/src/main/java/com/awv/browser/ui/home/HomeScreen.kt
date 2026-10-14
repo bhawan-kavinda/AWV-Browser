@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -47,7 +48,7 @@ import com.awv.browser.ui.components.IconDef
 import com.awv.browser.ui.components.Wallpaper
 import com.awv.browser.ui.components.pressable
 import com.awv.browser.ui.theme.Awv
-import com.awv.browser.ui.theme.AwvFont
+import com.awv.browser.ui.theme.awvText
 
 // ---------- state & actions (wired to real data in later parts) ----------
 
@@ -69,11 +70,6 @@ class HomeActions(
     val onMenu: () -> Unit = {}
 )
 
-private fun txt(size: Int, weight: FontWeight, color: Color, ls: Float = 0f, lh: Int? = null) = TextStyle(
-    fontFamily = AwvFont, fontSize = size.sp, fontWeight = weight, color = color,
-    letterSpacing = ls.sp, lineHeight = lh?.sp ?: TextStyle.Default.lineHeight
-)
-
 // ---------- screen ----------
 
 @Composable
@@ -83,13 +79,14 @@ fun HomeScreen(
     tabCount: Int = 1,
     canGoBack: Boolean = true,
     canGoForward: Boolean = false,
+    isPrivate: Boolean = false,
     actions: HomeActions = HomeActions()
 ) {
     Box(Modifier.fillMaxSize().background(Awv.Bg)) {
         Wallpaper()
         Column(Modifier.fillMaxSize()) {
-            HomeContent(stats, shortcuts, actions, Modifier.weight(1f))
-            BottomBar(tabCount, canGoBack, canGoForward, actions)
+            HomeContent(stats, shortcuts, isPrivate, actions, Modifier.weight(1f))
+            BottomBar(tabCount, canGoBack, canGoForward, isPrivate, actions)
         }
     }
 }
@@ -98,6 +95,7 @@ fun HomeScreen(
 private fun HomeContent(
     stats: PrivacyStats,
     shortcuts: List<Shortcut>,
+    isPrivate: Boolean,
     a: HomeActions,
     modifier: Modifier
 ) {
@@ -109,13 +107,31 @@ private fun HomeContent(
     ) {
         Omnibox(a)
         StatsCard(stats, a.onStats, Modifier.padding(top = 16.dp))
+        if (isPrivate) PrivateBadge(Modifier.padding(start = 4.dp, top = 24.dp))
         BasicText(
             "Browse fast.\nStay private.",
-            Modifier.padding(start = 4.dp, end = 4.dp, top = 28.dp),
-            style = txt(36, FontWeight.ExtraBold, Color.White, ls = -1f, lh = 38)
+            Modifier.padding(start = 4.dp, end = 4.dp, top = if (isPrivate) 12.dp else 28.dp),
+            style = awvText(36, FontWeight.ExtraBold, Color.White, ls = -1f, lh = 38)
         )
         Spacer(Modifier.weight(1f).height(12.dp))
         ShortcutGrid(shortcuts, a)
+    }
+}
+
+@Composable
+private fun PrivateBadge(modifier: Modifier) {
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        modifier
+            .height(32.dp)
+            .background(Color.White.copy(alpha = .16f), shape)
+            .border(1.dp, Color.White.copy(alpha = .24f), shape)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        AwvIcon(AwvIcons.Private, size = 16.dp, tint = Color.White, strokeWidth = 1.8f)
+        BasicText("Private tab", style = awvText(13, FontWeight.Bold, Color.White))
     }
 }
 
@@ -124,6 +140,7 @@ private fun HomeContent(
 @Composable
 private fun Omnibox(a: HomeActions) {
     var query by rememberSaveable { mutableStateOf("") }
+    val focus = LocalFocusManager.current
     val shape = RoundedCornerShape(26.dp)
     Row(
         Modifier
@@ -146,16 +163,21 @@ private fun Omnibox(a: HomeActions) {
             onValueChange = { query = it },
             modifier = Modifier.weight(1f),
             singleLine = true,
-            textStyle = txt(15, FontWeight.Medium, Awv.Ink),
+            textStyle = awvText(15, FontWeight.Medium, Awv.Ink),
             cursorBrush = SolidColor(Awv.Coral),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
-            keyboardActions = KeyboardActions(onGo = { if (query.isNotBlank()) a.onSubmit(query.trim()) }),
+            keyboardActions = KeyboardActions(onGo = {
+                if (query.isNotBlank()) {
+                    focus.clearFocus()
+                    a.onSubmit(query.trim())
+                }
+            }),
             decorationBox = { inner ->
                 Box(contentAlignment = Alignment.CenterStart) {
                     if (query.isEmpty()) {
                         BasicText(
                             "Search or type URL",
-                            style = txt(15, FontWeight.Medium, Awv.Muted),
+                            style = awvText(15, FontWeight.Medium, Awv.Muted),
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                     }
@@ -193,7 +215,7 @@ private fun StatsCard(stats: PrivacyStats, onClick: () -> Unit, modifier: Modifi
             Box(Modifier.size(28.dp).background(Awv.Orange, CircleShape), contentAlignment = Alignment.Center) {
                 AwvIcon(AwvIcons.Shield, size = 16.dp, tint = Color.White, strokeWidth = 2.2f)
             }
-            BasicText("Protected this week", Modifier.weight(1f), style = txt(14, FontWeight.Bold, Color.White))
+            BasicText("Protected this week", Modifier.weight(1f), style = awvText(14, FontWeight.Bold, Color.White))
             AwvIcon(AwvIcons.Chevron, size = 18.dp, tint = Color.White, strokeWidth = 2f)
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -207,8 +229,8 @@ private fun StatsCard(stats: PrivacyStats, onClick: () -> Unit, modifier: Modifi
 @Composable
 private fun RowScope.Stat(value: String, label: String) {
     Column(Modifier.weight(1f)) {
-        BasicText(value, style = txt(24, FontWeight.ExtraBold, Color.White, ls = -.5f), maxLines = 1)
-        BasicText(label, style = txt(12, FontWeight.Normal, Color.White.copy(alpha = .78f)))
+        BasicText(value, style = awvText(24, FontWeight.ExtraBold, Color.White, ls = -.5f), maxLines = 1)
+        BasicText(label, style = awvText(12, FontWeight.Normal, Color.White.copy(alpha = .78f)))
     }
 }
 
@@ -226,7 +248,7 @@ private fun ColumnScope.ShortcutGrid(shortcuts: List<Shortcut>, a: HomeActions) 
                         Tile(s.title, Modifier.weight(1f), onClick = { a.onShortcut(s) }) {
                             BasicText(
                                 s.title.take(1).uppercase(),
-                                style = txt(24, FontWeight.ExtraBold, Awv.Brand)
+                                style = awvText(24, FontWeight.ExtraBold, Awv.Brand)
                             )
                         }
                     } else {
@@ -267,7 +289,7 @@ private fun Tile(
         Box(box, contentAlignment = Alignment.Center) { icon() }
         BasicText(
             label,
-            style = txt(12, FontWeight.Medium, Color.White).copy(textAlign = TextAlign.Center),
+            style = awvText(12, FontWeight.Medium, Color.White).copy(textAlign = TextAlign.Center),
             maxLines = 1, overflow = TextOverflow.Ellipsis
         )
     }
@@ -276,7 +298,7 @@ private fun Tile(
 // ---------- bottom bar ----------
 
 @Composable
-private fun BottomBar(tabCount: Int, canGoBack: Boolean, canGoForward: Boolean, a: HomeActions) {
+fun BottomBar(tabCount: Int, canGoBack: Boolean, canGoForward: Boolean, isPrivate: Boolean, a: HomeActions) {
     Column(Modifier.fillMaxWidth().background(Color.White).navigationBarsPadding()) {
         Box(Modifier.fillMaxWidth().height(1.dp).background(Awv.Line))
         Row(
@@ -297,7 +319,7 @@ private fun BottomBar(tabCount: Int, canGoBack: Boolean, canGoForward: Boolean, 
                     .pressable(label = "New tab", onClick = a.onNewTab),
                 contentAlignment = Alignment.Center
             ) { AwvIcon(AwvIcons.Plus, size = 26.dp, tint = Color.White, strokeWidth = 2.4f) }
-            BarButton("Tabs", true, a.onTabs) { TabCount(tabCount) }
+            BarButton("Tabs", true, a.onTabs) { TabCount(tabCount, isPrivate) }
             BarButton("Menu", true, a.onMenu) { AwvIcon(AwvIcons.Dots) }
         }
     }
@@ -312,14 +334,15 @@ private fun BarButton(label: String, enabled: Boolean, onClick: () -> Unit, cont
 }
 
 @Composable
-private fun TabCount(count: Int) {
+private fun TabCount(count: Int, isPrivate: Boolean) {
+    val color = if (isPrivate) Awv.Purple else Awv.Ink
     Box(
-        Modifier.size(26.dp).border(2.dp, Awv.Ink, RoundedCornerShape(8.dp)),
+        Modifier.size(26.dp).border(2.dp, color, RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
         BasicText(
             if (count > 99) ":D" else count.toString(),
-            style = txt(13, FontWeight.ExtraBold, Awv.Ink)
+            style = awvText(13, FontWeight.ExtraBold, color)
         )
     }
 }

@@ -1,27 +1,32 @@
-# Awv browser (Android WebView) — Part 1/5: Project setup + Home UI
+# Awv browser (Android WebView) — Part 2/5: WebView engine + Tabs
 
 Open this folder in Android Studio (Koala+ / JDK 17), let Gradle sync, then Run.
 
-Structure
-- `ui/theme/Theme.kt`          colors + font hook (Manrope optional)
-- `ui/components/AwvIcons.kt`  all SVG icons (same 24x24 path data as the demo) drawn natively
-- `ui/components/Wallpaper.kt` sunset/mountain wallpaper (demo SVG, native)
-- `ui/components/Pressable.kt` tap + press animation
-- `ui/home/HomeScreen.kt`      omnibox, protected card, hero, shortcut grid, bottom bar
+## Done so far
+**Part 1** – project setup, theme, SVG icons (drawn natively), sunset wallpaper, home screen.
+**Part 2** – real browsing and tabs:
+- Omnibox on the start page: text is a URL (`example.com`, `http://localhost:3000`, `192.168.1.1`) → opened; anything else → Google search.
+- Browsing page: address bar (lock icon, host while idle / full URL while editing, reload ⇄ stop), progress bar, WebView, bottom bar.
+- Back / Forward (back from the first page returns to the start page, forward goes back to the page), new tab, tab-count badge.
+- Tabs overlay: Normal / Private switch, tab cards with live thumbnails, close (✕), Done, New tab (creates a tab of the selected kind).
+- Private tabs: purple badge + dark address bar + "Private tab" label on their start page.
+- Load-error screen (offline, DNS, bad certificate, renderer crash) with "Try again".
+- `target=_blank` / `window.open` (only after a user tap) open in a new tab; `mailto:` `tel:` `intent:` links go to the matching app.
+- Fullscreen page video, Android Back handling (video → tabs overlay → page history).
 
-Not wired yet (comes in later parts): WebView, tabs, menu, history, ad-block, real stats, shortcuts.
+## Structure
+- `browser/BrowserTab.kt`        per-tab state (url, title, progress, error, thumbnail, WebView)
+- `browser/BrowserController.kt` all tabs + WebView setup, clients, navigation, thumbnails
+- `browser/UrlUtils.kt`          URL-or-search detection, host display
+- `ui/browser/BrowserApp.kt`     root: start page / web page / tabs overlay / video fullscreen
+- `ui/browser/BrowserPage.kt`    address bar, progress strip, WebView host, error view
+- `ui/tabs/TabsOverlay.kt`       tabs screen
+- `ui/home`, `ui/components`, `ui/theme`  from Part 1 (small additions: Lock/Reload/Globe icons, shared `awvText`)
 
+## Manifest changes
+`usesCleartextTraffic="true"` (so `http://` sites load) and `configChanges` (rotation keeps your tabs).
 
-ඔය demo එකේ ඩිසයින් එක use කරලා හදන්න android web veiw හරහා run වෙන kotin app එකක් ඒවගේම ඔයා place holder නොද තියෙන option වලට පමණක් අදාළ දේවල් දාන්න සහ svg icon දාලා හොදට හදලා දෙන්න Awv browser කියලා නම දාන්න ( android web veiw)
-ඔක්කොම එකපාර හදන්න යන්න එපා 
+## Not wired yet (later parts)
+Menu sheet, bookmarks, history, downloads, desktop site (Part 3) · ad/tracker blocking, shield, real stats, true Private isolation of cookies/cache (Part 4) · voice, QR scan, shortcut tiles, settings, search-engine choice, icon, release build (Part 5).
 
-1. **Project setup + Home screen UI**: Kotlin + Jetpack Compose project (`com.awv.browser`), Manrope font, demo එකේ color theme, SVG icons ඔක්කොම Vector drawables බවට, sunset wallpaper එක vector එකක් විදිහට, home screen (omnibox, "Protected this week" card, hero text, bottom bar).
-
-2. **WebView engine + Tabs**: URL/search detect කිරීම, page load + progress bar, back/forward, new tab, tabs overlay (Normal/Private switch, tab cards, close, count badge).
-
-3. **Menu sheet + Data**: menu bottom sheet, Bookmarks, History (Room DB), Downloads (DownloadManager), Desktop site toggle (user-agent + viewport).
-
-4. **Privacy features**: ad/tracker blocking (`shouldInterceptRequest` + filter list), shield button + menu toggle, real stats counters (blocked / data saved / time saved), true Private mode (no history, cookies, cache).
-
-5. **Extras + Release**: voice search, QR/code scan, user-added shortcut tiles ("Add" button), Settings screen (search engine, clear data), app icon, final polish, release APK build.
-
+Tabs live in memory only: they are not restored if Android kills the app process.

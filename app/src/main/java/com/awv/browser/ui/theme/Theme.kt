@@ -11,6 +11,7 @@ object Awv {
     val Muted = Color(0xFF6B6880)
     val Line = Color(0xFFE6E4EE)
     val Disabled = Color(0xFFB9B6C8)
+    val Track = Color(0xFFE9E7F1)
 
     val Brand = Color(0xFFD93A12)
     val BrandSoft = Color(0xFFFFEDE6)
