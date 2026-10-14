@@ -28,6 +28,11 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.awv.browser.browser.BrowserController
 import com.awv.browser.ui.home.HomeActions
 import com.awv.browser.ui.home.HomeScreen
+import com.awv.browser.ui.menu.BookmarksScreen
+import com.awv.browser.ui.menu.DownloadsScreen
+import com.awv.browser.ui.menu.HistoryScreen
+import com.awv.browser.ui.menu.MenuSheet
+import com.awv.browser.ui.menu.Sheet
 import com.awv.browser.ui.tabs.TabsOverlay
 import com.awv.browser.ui.theme.Awv
 
@@ -36,6 +41,7 @@ import com.awv.browser.ui.theme.Awv
 fun BrowserApp(c: BrowserController) {
     val tab = c.active
     var showTabs by remember { mutableStateOf(false) }
+    var sheet by remember { mutableStateOf(Sheet.None) }
     val fullscreen = c.customView
 
     val actions = HomeActions(
@@ -43,17 +49,19 @@ fun BrowserApp(c: BrowserController) {
         onBack = c::goBack,
         onForward = c::goForward,
         onNewTab = { c.newTab(c.active.isPrivate) },
+        onMenu = { sheet = Sheet.Menu },
         onTabs = {
             c.captureThumbnail(c.active)
             showTabs = true
         }
     )
 
-    StatusBarIcons(darkIcons = showTabs || (!tab.showHome && !tab.isPrivate))
+    StatusBarIcons(darkIcons = showTabs || sheet >= Sheet.Bookmarks || (!tab.showHome && !tab.isPrivate))
 
-    BackHandler(enabled = fullscreen != null || showTabs || !tab.showHome) {
+    BackHandler(enabled = fullscreen != null || sheet != Sheet.None || showTabs || !tab.showHome) {
         when {
             fullscreen != null -> c.exitFullscreen()
+            sheet != Sheet.None -> sheet = Sheet.None
             showTabs -> showTabs = false
             else -> c.goBack()
         }
@@ -74,6 +82,13 @@ fun BrowserApp(c: BrowserController) {
             }
         }
         if (showTabs) TabsOverlay(c) { showTabs = false }
+        when (sheet) {
+            Sheet.Menu -> MenuSheet(c, tab, onDismiss = { sheet = Sheet.None }, onOpen = { sheet = it })
+            Sheet.Bookmarks -> BookmarksScreen(c) { sheet = Sheet.None }
+            Sheet.History -> HistoryScreen(c) { sheet = Sheet.None }
+            Sheet.Downloads -> DownloadsScreen { sheet = Sheet.None }
+            Sheet.None -> Unit
+        }
         if (fullscreen != null) FullscreenVideo(fullscreen)
     }
 

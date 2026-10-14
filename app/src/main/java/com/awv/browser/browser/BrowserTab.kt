@@ -24,6 +24,12 @@ class BrowserTab(val id: Int, val isPrivate: Boolean) {
     var webCanGoForward by mutableStateOf(false)
     var thumbnail by mutableStateOf<ImageBitmap?>(null)
 
+    /** Desktop-site mode (desktop user-agent + wide viewport). */
+    var desktop by mutableStateOf(false)
+
+    /** Last URL written to history, so reloads / SPA updates are not logged twice. */
+    var loggedUrl: String? = null
+
     /** Created lazily on the first navigation; null for a fresh start-page tab. */
     var webView by mutableStateOf<WebView?>(null)
 }

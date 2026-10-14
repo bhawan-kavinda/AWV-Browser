@@ -1,4 +1,4 @@
-# Awv browser (Android WebView) — Part 2/5: WebView engine + Tabs
+# Awv browser (Android WebView) — Part 3/5: Menu + Data
 
 Open this folder in Android Studio (Koala+ / JDK 17), let Gradle sync, then Run.
 
@@ -13,6 +13,13 @@ Open this folder in Android Studio (Koala+ / JDK 17), let Gradle sync, then Run.
 - Load-error screen (offline, DNS, bad certificate, renderer crash) with "Try again".
 - `target=_blank` / `window.open` (only after a user tap) open in a new tab; `mailto:` `tel:` `intent:` links go to the matching app.
 - Fullscreen page video, Android Back handling (video → tabs overlay → page history).
+
+**Part 3** – menu + data:
+- Menu bottom sheet (⋮): Bookmark this page, Desktop site, New private tab, Bookmarks, History, Downloads.
+- Bookmarks and History in Room (`data/AwvDb.kt`); History groups by day, skips Private tabs and error pages, 500 newest kept in the list.
+- Downloads via `DownloadManager` (public Downloads folder on Android 10+, app folder on older versions); list shows live progress, tap opens, trash/✕ deletes/cancels.
+- Desktop site per tab: desktop user-agent + 1024px viewport, then reload.
+- New build deps: Room 2.6.1 + KSP 2.0.20-1.0.25.
 
 ## Structure
 - `browser/BrowserTab.kt`        per-tab state (url, title, progress, error, thumbnail, WebView)

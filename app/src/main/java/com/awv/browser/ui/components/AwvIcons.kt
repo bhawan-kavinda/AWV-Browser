@@ -97,6 +97,10 @@ object AwvIcons {
         circle(12f, 12f, 9f, Fill.Soft),
         p("M3 12h18M12 3c2.5 2.4 3.8 5.5 3.8 9s-1.3 6.6-3.8 9c-2.5-2.4-3.8-5.5-3.8-9s1.3-6.6 3.8-9z")
     )
+    val Trash = icon(
+        p("M5 7h14M10 7V4.5h4V7M7 7l.8 12.2a1 1 0 0 0 1 .8h6.4a1 1 0 0 0 1-.8L17 7", Fill.Soft),
+        p("M10.5 11v5M13.5 11v5")
+    )
     val Settings = icon(
         circle(12f, 12f, 3f, Fill.Soft),
         p("M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8")
